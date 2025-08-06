@@ -17,7 +17,10 @@ export const getDailyKey = async (): Promise<DailyKey | null> => {
   try {
     const { data, error } = await supabase.functions.invoke('daily-key')
     
-    if (error) throw error
+    if (error) {
+      console.error('Supabase function error:', error)
+      throw error
+    }
     return data
   } catch (error) {
     console.error('Error fetching daily key:', error)
