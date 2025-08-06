@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Shield, Users, Key, Activity, Settings, LogOut } from "lucide-react";
-import { adminLogin, getAdminStats, validateAdminSession, adminLogout, type AdminStats } from "@/lib/supabase";
+import { ArrowLeft, Shield, Users, Key, Activity, Settings, LogOut, RefreshCw, UserPlus } from "lucide-react";
+import { adminLogin, getAdminStats, validateAdminSession, adminLogout, regenerateDailyKey, createAdminUsers, type AdminStats } from "@/lib/supabase";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -116,6 +116,43 @@ const Admin = () => {
 
   const handleRefreshStats = () => {
     loadStats();
+  };
+
+  const handleRegenerateDailyKey = async () => {
+    if (!authToken) return;
+    
+    try {
+      const result = await regenerateDailyKey(authToken);
+      if (result.success) {
+        toast({
+          title: "Daily Key Regenerated",
+          description: `New key: ${result.key.license_key}`,
+        });
+        loadStats(); // Refresh stats to show the new key
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to regenerate daily key.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateAdminUsers = async () => {
+    try {
+      const result = await createAdminUsers();
+      toast({
+        title: "Admin Users Created",
+        description: "Admin users Jaxe and skol have been created successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create admin users.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!isLoggedIn) {
@@ -290,6 +327,75 @@ const Admin = () => {
                   <p className="text-sm text-muted-foreground">Uptime</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Admin Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="glass-card border-primary/30 animate-slide-up">
+            <CardHeader>
+              <CardTitle className="text-primary flex items-center">
+                <RefreshCw className="w-5 h-5 mr-2" />
+                Regenerate Daily Key
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Generate a new daily key and invalidate the current one.
+              </p>
+              <Button 
+                onClick={handleRegenerateDailyKey}
+                className="w-full"
+                variant="outline"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate Key
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-primary/30 animate-slide-up delay-100">
+            <CardHeader>
+              <CardTitle className="text-primary flex items-center">
+                <UserPlus className="w-5 h-5 mr-2" />
+                Create Admin Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create the default admin users (Jaxe and skol).
+              </p>
+              <Button 
+                onClick={handleCreateAdminUsers}
+                className="w-full"
+                variant="outline"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create Users
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-primary/30 animate-slide-up delay-200">
+            <CardHeader>
+              <CardTitle className="text-primary flex items-center">
+                <Settings className="w-5 h-5 mr-2" />
+                System Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Additional administrative functions and settings.
+              </p>
+              <Button 
+                className="w-full"
+                variant="outline"
+                disabled
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Coming Soon
+              </Button>
             </CardContent>
           </Card>
         </div>

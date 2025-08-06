@@ -89,3 +89,31 @@ export const getAdminStats = async (token: string): Promise<AdminStats | null> =
     return null
   }
 }
+
+export const regenerateDailyKey = async (token: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('regenerate-daily-key', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error regenerating daily key:', error)
+    throw error
+  }
+}
+
+export const createAdminUsers = async () => {
+  try {
+    const { data, error } = await supabase.functions.invoke('create-admin-users')
+    
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error creating admin users:', error)
+    throw error
+  }
+}
