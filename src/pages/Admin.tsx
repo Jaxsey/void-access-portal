@@ -1,49 +1,79 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Users, Key, Settings, Activity, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Shield, Users, Key, Activity, Settings, LogOut } from "lucide-react";
+import { adminLogin, getAdminStats, type AdminStats } from "@/lib/supabase";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-  });
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Simple demo auth - in real app this would connect to your Flask backend
-    if (credentials.username === "admin" && credentials.password === "admin123") {
+  useEffect(() => {
+    // Check for existing session
+    const token = localStorage.getItem('adminToken');
+    if (token) {
       setIsLoggedIn(true);
-      toast({
-        title: "Login Successful",
-        description: "Welcome to the admin panel",
-        duration: 3000,
-      });
-    } else {
+      loadStats();
+    }
+  }, []);
+
+  const loadStats = async () => {
+    setLoadingStats(true);
+    try {
+      const adminStats = await getAdminStats();
+      setStats(adminStats);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const result = await adminLogin(username, password);
+      if (result.success) {
+        localStorage.setItem('adminToken', result.token);
+        setIsLoggedIn(true);
+        loadStats();
+        toast({
+          title: "Login Successful",
+          description: "Welcome to the admin panel.",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials",
+        description: "Invalid username or password.",
         variant: "destructive",
-        duration: 3000,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('adminToken');
     setIsLoggedIn(false);
-    setCredentials({ username: "", password: "" });
+    setUsername("");
+    setPassword("");
+    setStats(null);
     toast({
       title: "Logged Out",
-      description: "You have been successfully logged out",
-      duration: 2000,
+      description: "You have been logged out successfully.",
     });
   };
 
@@ -85,10 +115,8 @@ const Admin = () => {
                     id="username"
                     type="text"
                     placeholder="Enter username"
-                    value={credentials.username}
-                    onChange={(e) =>
-                      setCredentials({ ...credentials, username: e.target.value })
-                    }
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                     className="bg-input/50 border-border/50 focus:border-primary"
                   />
@@ -100,10 +128,8 @@ const Admin = () => {
                     id="password"
                     type="password"
                     placeholder="Enter password"
-                    value={credentials.password}
-                    onChange={(e) =>
-                      setCredentials({ ...credentials, password: e.target.value })
-                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     className="bg-input/50 border-border/50 focus:border-primary"
                   />
@@ -113,9 +139,10 @@ const Admin = () => {
                   type="submit"
                   size="lg"
                   className="w-full bg-gradient-primary hover:scale-105 transition-all duration-300"
+                  disabled={isLoading}
                 >
                   <Shield className="w-4 h-4 mr-2" />
-                  Login to Admin Panel
+                  {isLoading ? "Logging in..." : "Login to Admin Panel"}
                 </Button>
               </form>
               
@@ -170,8 +197,10 @@ const Admin = () => {
                   <Users className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">1,234</p>
-                  <p className="text-sm text-muted-foreground">Active Users</p>
+                  <p className="text-2xl font-bold">
+                    {loadingStats ? "..." : stats?.totalAccess || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Total Access</p>
                 </div>
               </div>
             </CardContent>
@@ -184,8 +213,10 @@ const Admin = () => {
                   <Key className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">5,678</p>
-                  <p className="text-sm text-muted-foreground">Keys Generated</p>
+                  <p className="text-2xl font-bold">
+                    {loadingStats ? "..." : stats?.dailyKeys?.length || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Daily Keys</p>
                 </div>
               </div>
             </CardContent>
@@ -198,8 +229,10 @@ const Admin = () => {
                   <Activity className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">99.9%</p>
-                  <p className="text-sm text-muted-foreground">Uptime</p>
+                  <p className="text-2xl font-bold">
+                    {loadingStats ? "..." : stats?.todayAccess || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Today's Access</p>
                 </div>
               </div>
             </CardContent>
@@ -209,96 +242,85 @@ const Admin = () => {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className="p-3 rounded-lg bg-accent/20">
-                  <Database className="w-6 h-6 text-accent-foreground" />
+                  <Activity className="w-6 h-6 text-accent-foreground" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">342</p>
-                  <p className="text-sm text-muted-foreground">DB Queries/min</p>
+                  <p className="text-2xl font-bold">99.9%</p>
+                  <p className="text-sm text-muted-foreground">Uptime</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Admin Actions */}
+        {/* Management Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="glass-card border-primary/30 animate-slide-up delay-400">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Key className="w-5 h-5 text-primary" />
-                <span>Key Management</span>
-              </CardTitle>
+              <CardTitle className="text-primary">Recent Access Logs</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button className="w-full justify-start" variant="outline">
-                Generate Bulk Keys
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                Revoke License Keys
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                View Key Analytics
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                Export Key Database
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {loadingStats ? (
+                  <div className="text-center text-muted-foreground">Loading...</div>
+                ) : stats?.recentAccesses?.length ? (
+                  stats.recentAccesses.map((access, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-background/50 rounded">
+                      <span className="text-sm">{access.ip_address || 'Unknown IP'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(access.accessed_at).toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground">No access logs found</div>
+                )}
+              </div>
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={loadStats}
+                disabled={loadingStats}
+              >
+                <Activity className="mr-2 h-4 w-4" />
+                Refresh Logs
               </Button>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-primary/30 animate-slide-up delay-500">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="w-5 h-5 text-primary" />
-                <span>System Settings</span>
-              </CardTitle>
+              <CardTitle className="text-primary">Daily Keys History</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button className="w-full justify-start" variant="outline">
-                Configure Rate Limits
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                Manage User Permissions
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                System Maintenance
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                View Server Logs
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {loadingStats ? (
+                  <div className="text-center text-muted-foreground">Loading...</div>
+                ) : stats?.dailyKeys?.length ? (
+                  stats.dailyKeys.slice(0, 10).map((key, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-background/50 rounded">
+                      <span className="text-sm font-mono">{key.license_key}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(key.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground">No keys found</div>
+                )}
+              </div>
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={loadStats}
+                disabled={loadingStats}
+              >
+                <Key className="mr-2 h-4 w-4" />
+                Refresh Keys
               </Button>
             </CardContent>
           </Card>
         </div>
-
-        {/* Recent Activity */}
-        <Card className="glass-card border-primary/30 animate-slide-up delay-600">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Activity className="w-5 h-5 text-primary" />
-              <span>Recent Activity</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { action: "New key generated", user: "user_1234", time: "2 minutes ago" },
-                { action: "User registered", user: "user_1235", time: "5 minutes ago" },
-                { action: "Key expired", user: "user_1233", time: "10 minutes ago" },
-                { action: "Admin login", user: "admin", time: "15 minutes ago" },
-              ].map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/30"
-                >
-                  <div>
-                    <p className="font-medium">{activity.action}</p>
-                    <p className="text-sm text-muted-foreground">User: {activity.user}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{activity.time}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

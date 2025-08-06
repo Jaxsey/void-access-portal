@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import KeyPage from "./pages/KeyPage";
+import DynamicKeyPage from "./pages/DynamicKeyPage";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -18,7 +18,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/key" element={<KeyPage />} />
+          <Route path="/key*" element={<DynamicKeyPage />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

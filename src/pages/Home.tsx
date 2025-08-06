@@ -1,13 +1,34 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import { Key, Shield, Zap, MessageCircle } from "lucide-react";
+import { getDailyKey, type DailyKey } from "@/lib/supabase";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [dailyKey, setDailyKey] = useState<DailyKey | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDailyKey();
+  }, []);
+
+  const loadDailyKey = async () => {
+    try {
+      const key = await getDailyKey();
+      setDailyKey(key);
+    } catch (error) {
+      console.error('Error loading daily key:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGetKey = () => {
-    navigate("/key");
+    if (dailyKey) {
+      navigate(`/${dailyKey.url_path}`);
+    }
   };
 
   return (
@@ -64,14 +85,15 @@ const Home = () => {
 
             {/* CTA Button */}
             <div className="text-center">
-              <Button
-                onClick={handleGetKey}
-                size="lg"
-                className="bg-gradient-primary hover:scale-105 transition-all duration-300 text-lg px-8 py-6 shadow-lg hover:shadow-primary/30"
-              >
-                <Key className="w-5 h-5 mr-2" />
-                Get Your License Key
-              </Button>
+                <Button
+                  onClick={handleGetKey}
+                  size="lg"
+                  className="bg-gradient-primary hover:scale-105 transition-all duration-300 text-lg px-8 py-6 shadow-lg hover:shadow-primary/30"
+                  disabled={loading || !dailyKey}
+                >
+                  <Key className="w-5 h-5 mr-2" />
+                  {loading ? "Loading..." : "Get Your License Key"}
+                </Button>
               <p className="text-sm text-muted-foreground mt-4">
                 Valid for 24 hours • Updates daily
               </p>
