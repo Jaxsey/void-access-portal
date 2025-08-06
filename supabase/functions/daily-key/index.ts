@@ -22,7 +22,15 @@ serve(async (req) => {
     const { data, error } = await supabaseClient.rpc('get_or_create_daily_key')
 
     if (error) {
+      console.error('Database error:', error)
       throw error
+    }
+
+    // The RPC function returns an array, get the first result
+    const keyData = Array.isArray(data) ? data[0] : data
+    
+    if (!keyData) {
+      throw new Error('No key data returned')
     }
 
     // Log the access
@@ -35,7 +43,7 @@ serve(async (req) => {
     })
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(keyData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
