@@ -14,13 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_keys: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          license_key: string
+          url_path: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          license_key: string
+          url_path: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          license_key?: string
+          url_path?: string
+        }
+        Relationships: []
+      }
+      key_access_logs: {
+        Row: {
+          accessed_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_random_string: {
+        Args: { length: number }
+        Returns: string
+      }
+      get_or_create_daily_key: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          license_key: string
+          url_path: string
+          date: string
+        }[]
+      }
+      log_key_access: {
+        Args: { ip_addr: string; user_agent_val: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
