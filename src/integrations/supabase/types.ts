@@ -157,6 +157,10 @@ export type Database = {
           valid: boolean
         }[]
       }
+      verify_admin_password: {
+        Args: { input_username: string; input_password: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
