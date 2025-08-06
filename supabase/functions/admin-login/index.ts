@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.220.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { compare } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,15 +29,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get admin user
-    const { data: adminUser, error } = await supabaseClient
-      .from('admin_users')
-      .select('*')
-      .eq('username', username)
-      .maybeSingle()
+    // Verify password using PostgreSQL's crypt function
+    const { data: passwordCheck, error: passwordError } = await supabaseClient
+      .rpc('verify_admin_password', {
+        input_username: username,
+        input_password: password
+      })
 
-    if (error) {
-      console.error('Database error:', error)
+    if (passwordError) {
+      console.error('Password verification error:', passwordError)
       return new Response(
         JSON.stringify({ error: 'Database error' }),
         {
@@ -48,7 +47,7 @@ serve(async (req) => {
       )
     }
 
-    if (!adminUser) {
+    if (!passwordCheck) {
       return new Response(
         JSON.stringify({ error: 'Invalid credentials' }),
         {
@@ -58,14 +57,19 @@ serve(async (req) => {
       )
     }
 
-    // Verify password
-    const isValid = await compare(password, adminUser.password_hash)
+    // Get admin user for session creation
+    const { data: adminUser, error } = await supabaseClient
+      .from('admin_users')
+      .select('*')
+      .eq('username', username)
+      .maybeSingle()
 
-    if (!isValid) {
+    if (error || !adminUser) {
+      console.error('Database error:', error)
       return new Response(
-        JSON.stringify({ error: 'Invalid credentials' }),
+        JSON.stringify({ error: 'Database error' }),
         {
-          status: 401,
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         },
       )
