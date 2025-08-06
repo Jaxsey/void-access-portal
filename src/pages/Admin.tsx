@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Shield, Users, Key, Activity, Settings, LogOut, RefreshCw, UserPlus } from "lucide-react";
-import { adminLogin, getAdminStats, validateAdminSession, adminLogout, regenerateDailyKey, createAdminUsers, type AdminStats } from "@/lib/supabase";
+import { ArrowLeft, Shield, Users, Key, Activity, Settings, LogOut, RefreshCw } from "lucide-react";
+import { adminLogin, getAdminStats, validateAdminSession, adminLogout, regenerateDailyKey, type AdminStats } from "@/lib/supabase";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -139,21 +139,6 @@ const Admin = () => {
     }
   };
 
-  const handleCreateAdminUsers = async () => {
-    try {
-      const result = await createAdminUsers();
-      toast({
-        title: "Admin Users Created",
-        description: "Admin users Jaxe and skol have been created successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create admin users.",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (!isLoggedIn) {
     return (
@@ -326,7 +311,7 @@ const Admin = () => {
         </div>
 
         {/* Admin Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="glass-card border-primary/30 animate-slide-up">
             <CardHeader>
               <CardTitle className="text-primary flex items-center">
@@ -349,27 +334,6 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-primary/30 animate-slide-up delay-100">
-            <CardHeader>
-              <CardTitle className="text-primary flex items-center">
-                <UserPlus className="w-5 h-5 mr-2" />
-                Create Admin Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Create the default admin users (Jaxe and skol).
-              </p>
-              <Button 
-                onClick={handleCreateAdminUsers}
-                className="w-full"
-                variant="outline"
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Create Users
-              </Button>
-            </CardContent>
-          </Card>
 
           <Card className="glass-card border-primary/30 animate-slide-up delay-200">
             <CardHeader>
