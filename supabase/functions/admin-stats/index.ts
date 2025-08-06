@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.220.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -83,7 +83,21 @@ serve(async (req) => {
       .select('*')
       .order('date', { ascending: false })
 
-    if (todayError || totalError || recentError || keysError) {
+    // Get premium keys
+    const { data: premiumKeys, error: premiumKeysError } = await supabaseClient
+      .from('premium_keys')
+      .select('license_key, expires_at, is_active, created_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
+    // Get admin keys
+    const { data: adminKeys, error: adminKeysError } = await supabaseClient
+      .from('admin_keys')
+      .select('license_key, created_at, is_active')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
+    if (todayError || totalError || recentError || keysError || premiumKeysError || adminKeysError) {
       throw new Error('Failed to fetch stats')
     }
 
@@ -92,7 +106,9 @@ serve(async (req) => {
         todayAccess: todayAccess?.length || 0,
         totalAccess: totalAccess?.length || 0,
         recentAccesses: recentAccesses || [],
-        dailyKeys: dailyKeys || []
+        dailyKeys: dailyKeys || [],
+        premiumKeys: premiumKeys || [],
+        adminKeys: adminKeys || []
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

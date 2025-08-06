@@ -11,6 +11,8 @@ export interface AdminStats {
   totalAccess: number
   recentAccesses: any[]
   dailyKeys: any[]
+  premiumKeys: any[]
+  adminKeys: any[]
 }
 
 export const getDailyKey = async (): Promise<DailyKey | null> => {
@@ -106,14 +108,34 @@ export const regenerateDailyKey = async (token: string) => {
   }
 }
 
-export const createAdminUsers = async () => {
+export const generatePremiumKey = async (token: string) => {
   try {
-    const { data, error } = await supabase.functions.invoke('create-admin-users')
+    const { data, error } = await supabase.functions.invoke('generate-premium-key', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Error creating admin users:', error)
+    console.error('Error generating premium key:', error)
+    throw error
+  }
+}
+
+export const generateAdminKey = async (token: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-admin-key', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error generating admin key:', error)
     throw error
   }
 }

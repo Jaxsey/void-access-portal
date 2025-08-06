@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_keys: {
+        Row: {
+          created_at: string
+          created_by_admin: string | null
+          id: string
+          is_active: boolean
+          license_key: string
+          url_path: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin?: string | null
+          id?: string
+          is_active?: boolean
+          license_key: string
+          url_path: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin?: string | null
+          id?: string
+          is_active?: boolean
+          license_key?: string
+          url_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_keys_created_by_admin_fkey"
+            columns: ["created_by_admin"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_sessions: {
         Row: {
           admin_id: string
@@ -124,6 +159,33 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_keys: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          is_active: boolean
+          license_key: string
+          url_path: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          license_key: string
+          url_path: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          license_key?: string
+          url_path?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -132,6 +194,21 @@ export type Database = {
       cleanup_expired_admin_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_admin_key: {
+        Args: { admin_user_id: string }
+        Returns: {
+          license_key: string
+          url_path: string
+        }[]
+      }
+      generate_premium_key: {
+        Args: { admin_user_id: string }
+        Returns: {
+          license_key: string
+          url_path: string
+          expires_at: string
+        }[]
       }
       generate_random_string: {
         Args: { length: number }
@@ -163,7 +240,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      key_type: "daily" | "premium" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -290,6 +367,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      key_type: ["daily", "premium", "admin"],
+    },
   },
 } as const
