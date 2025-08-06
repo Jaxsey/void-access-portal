@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Validate admin session
     const authHeader = req.headers.get('Authorization')
     const token = authHeader?.replace('Bearer ', '')
 
@@ -31,13 +30,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Validate session
-    const { data: sessionData, error: sessionError } = await supabaseClient.rpc('validate_admin_session', {
+    // Validate session using our database function
+    const { data: sessionData, error } = await supabaseClient.rpc('validate_admin_session', {
       token
     })
 
-    if (sessionError) {
-      console.error('Session validation error:', sessionError)
+    if (error) {
+      console.error('Session validation error:', error)
       return new Response(
         JSON.stringify({ error: 'Session validation failed' }),
         {
@@ -59,47 +58,20 @@ serve(async (req) => {
       )
     }
 
-    // Get today's access count
-    const { data: todayAccess, error: todayError } = await supabaseClient
-      .from('key_access_logs')
-      .select('id', { count: 'exact' })
-      .gte('accessed_at', new Date().toISOString().split('T')[0])
-
-    // Get total access count
-    const { data: totalAccess, error: totalError } = await supabaseClient
-      .from('key_access_logs')
-      .select('id', { count: 'exact' })
-
-    // Get recent accesses with details
-    const { data: recentAccesses, error: recentError } = await supabaseClient
-      .from('key_access_logs')
-      .select('*')
-      .order('accessed_at', { ascending: false })
-      .limit(10)
-
-    // Get all daily keys
-    const { data: dailyKeys, error: keysError } = await supabaseClient
-      .from('daily_keys')
-      .select('*')
-      .order('date', { ascending: false })
-
-    if (todayError || totalError || recentError || keysError) {
-      throw new Error('Failed to fetch stats')
-    }
-
     return new Response(
-      JSON.stringify({
-        todayAccess: todayAccess?.length || 0,
-        totalAccess: totalAccess?.length || 0,
-        recentAccesses: recentAccesses || [],
-        dailyKeys: dailyKeys || []
+      JSON.stringify({ 
+        valid: true,
+        user: { 
+          id: session.admin_id, 
+          username: session.username 
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     )
   } catch (error) {
-    console.error('Admin stats error:', error)
+    console.error('Admin validation error:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       {

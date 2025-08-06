@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Shield, Users, Key, Activity, Settings, LogOut } from "lucide-react";
-import { adminLogin, getAdminStats, type AdminStats } from "@/lib/supabase";
+import { adminLogin, getAdminStats, validateAdminSession, adminLogout, type AdminStats } from "@/lib/supabase";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -17,23 +17,50 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for existing session
+    // Check for existing session and validate it
     const token = localStorage.getItem('adminToken');
     if (token) {
-      setIsLoggedIn(true);
-      loadStats();
+      validateSession(token);
     }
   }, []);
 
-  const loadStats = async () => {
+  const validateSession = async (token: string) => {
+    try {
+      const result = await validateAdminSession(token);
+      if (result.valid) {
+        setAuthToken(token);
+        setIsLoggedIn(true);
+        loadStats(token);
+      } else {
+        // Invalid session, remove token
+        localStorage.removeItem('adminToken');
+        setIsLoggedIn(false);
+        setAuthToken(null);
+      }
+    } catch (error) {
+      console.error('Session validation failed:', error);
+      localStorage.removeItem('adminToken');
+      setIsLoggedIn(false);
+      setAuthToken(null);
+    }
+  };
+
+  const loadStats = async (token?: string) => {
+    const currentToken = token || authToken;
+    if (!currentToken) return;
+    
     setLoadingStats(true);
     try {
-      const adminStats = await getAdminStats();
+      const adminStats = await getAdminStats(currentToken);
       setStats(adminStats);
     } catch (error) {
       console.error('Error loading stats:', error);
+      if (error.message?.includes('Invalid or expired session')) {
+        handleLogout();
+      }
     } finally {
       setLoadingStats(false);
     }
@@ -47,8 +74,9 @@ const Admin = () => {
       const result = await adminLogin(username, password);
       if (result.success) {
         localStorage.setItem('adminToken', result.token);
+        setAuthToken(result.token);
         setIsLoggedIn(true);
-        loadStats();
+        loadStats(result.token);
         toast({
           title: "Login Successful",
           description: "Welcome to the admin panel.",
@@ -65,9 +93,18 @@ const Admin = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (authToken) {
+      try {
+        await adminLogout(authToken);
+      } catch (error) {
+        console.error('Logout API error:', error);
+      }
+    }
+    
     localStorage.removeItem('adminToken');
     setIsLoggedIn(false);
+    setAuthToken(null);
     setUsername("");
     setPassword("");
     setStats(null);
@@ -75,6 +112,10 @@ const Admin = () => {
       title: "Logged Out",
       description: "You have been logged out successfully.",
     });
+  };
+
+  const handleRefreshStats = () => {
+    loadStats();
   };
 
   if (!isLoggedIn) {
@@ -279,7 +320,7 @@ const Admin = () => {
               <Button 
                 className="w-full justify-start" 
                 variant="outline"
-                onClick={loadStats}
+                onClick={handleRefreshStats}
                 disabled={loadingStats}
               >
                 <Activity className="mr-2 h-4 w-4" />
@@ -312,7 +353,7 @@ const Admin = () => {
               <Button 
                 className="w-full justify-start" 
                 variant="outline"
-                onClick={loadStats}
+                onClick={handleRefreshStats}
                 disabled={loadingStats}
               >
                 <Key className="mr-2 h-4 w-4" />

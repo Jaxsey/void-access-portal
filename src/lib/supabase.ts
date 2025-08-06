@@ -42,9 +42,45 @@ export const adminLogin = async (username: string, password: string) => {
   }
 }
 
-export const getAdminStats = async (): Promise<AdminStats | null> => {
+export const validateAdminSession = async (token: string) => {
   try {
-    const { data, error } = await supabase.functions.invoke('admin-stats')
+    const { data, error } = await supabase.functions.invoke('admin-validate', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error validating session:', error)
+    throw error
+  }
+}
+
+export const adminLogout = async (token: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-logout', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error logging out:', error)
+    throw error
+  }
+}
+
+export const getAdminStats = async (token: string): Promise<AdminStats | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-stats', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     
     if (error) throw error
     return data
