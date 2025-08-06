@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.220.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { compare } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,15 +30,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Verify password using PostgreSQL's crypt function
-    const { data: passwordCheck, error: passwordError } = await supabaseClient
-      .rpc('verify_admin_password', {
-        input_username: username,
-        input_password: password
-      })
+    // Get admin user first
+    const { data: adminUser, error } = await supabaseClient
+      .from('admin_users')
+      .select('*')
+      .eq('username', username)
+      .maybeSingle()
 
-    if (passwordError) {
-      console.error('Password verification error:', passwordError)
+    if (error) {
+      console.error('Database error:', error)
       return new Response(
         JSON.stringify({ error: 'Database error' }),
         {
@@ -47,7 +48,7 @@ serve(async (req) => {
       )
     }
 
-    if (!passwordCheck) {
+    if (!adminUser) {
       return new Response(
         JSON.stringify({ error: 'Invalid credentials' }),
         {
@@ -57,19 +58,14 @@ serve(async (req) => {
       )
     }
 
-    // Get admin user for session creation
-    const { data: adminUser, error } = await supabaseClient
-      .from('admin_users')
-      .select('*')
-      .eq('username', username)
-      .maybeSingle()
+    // Verify password using bcrypt
+    const isValid = await compare(password, adminUser.password_hash)
 
-    if (error || !adminUser) {
-      console.error('Database error:', error)
+    if (!isValid) {
       return new Response(
-        JSON.stringify({ error: 'Database error' }),
+        JSON.stringify({ error: 'Invalid credentials' }),
         {
-          status: 500,
+          status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         },
       )
