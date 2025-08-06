@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
+import { hash } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,8 +19,8 @@ serve(async (req) => {
     )
 
     // Hash passwords for the two admin users
-    const jaxePasswordHash = await bcrypt.hash('Jax2003!', 10)
-    const skolPasswordHash = await bcrypt.hash('simingay', 10)
+    const jaxePasswordHash = await hash('Jax2003!', 10)
+    const skolPasswordHash = await hash('simingay', 10)
 
     // Insert admin users
     const { error: jaxeError } = await supabaseClient
