@@ -69,7 +69,7 @@ const KeyPage = () => {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl gradient-text">Today's Key</CardTitle>
             <p className="text-muted-foreground">
-              Valid for 24 hours • Updates daily
+              Valid for 24 hours • Macro access key
             </p>
           </CardHeader>
           
@@ -145,9 +145,9 @@ const KeyPage = () => {
                 <Key className="w-4 h-4 text-accent-foreground" />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium text-accent-foreground">Premium Options Available</h3>
+                <h3 className="font-medium text-accent-foreground">Macro Premium Available</h3>
                 <p className="text-sm text-muted-foreground">
-                  Upgrade for extended validity and advanced features
+                  Extended macro features and longer key validity
                 </p>
               </div>
             </div>

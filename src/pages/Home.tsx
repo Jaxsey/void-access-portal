@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Key, Shield, Zap } from "lucide-react";
+import { Key, Shield, Zap, MessageCircle } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -21,10 +21,10 @@ const Home = () => {
             </div>
           </div>
           <h1 className="text-5xl font-bold gradient-text animate-float">
-            KeyMaster
+            Static Macro
           </h1>
           <p className="text-xl text-muted-foreground max-w-md mx-auto">
-            Secure license key management system with premium features and enterprise-grade security
+            Advanced macro access key system. Get your authentication key to unlock premium macro features and automation tools.
           </p>
         </div>
 
@@ -37,27 +37,27 @@ const Home = () => {
                 <div className="p-3 rounded-lg bg-primary/20 w-fit mx-auto">
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold">Secure</h3>
+                <h3 className="font-semibold">Secure Access</h3>
                 <p className="text-sm text-muted-foreground">
-                  Military-grade encryption
+                  Protected macro authentication
                 </p>
               </div>
               <div className="text-center space-y-2">
                 <div className="p-3 rounded-lg bg-primary/20 w-fit mx-auto">
                   <Zap className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold">Fast</h3>
+                <h3 className="font-semibold">Instant Access</h3>
                 <p className="text-sm text-muted-foreground">
-                  Instant key generation
+                  Immediate macro activation
                 </p>
               </div>
               <div className="text-center space-y-2">
                 <div className="p-3 rounded-lg bg-primary/20 w-fit mx-auto">
                   <Key className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold">Reliable</h3>
+                <h3 className="font-semibold">Daily Keys</h3>
                 <p className="text-sm text-muted-foreground">
-                  99.9% uptime guarantee
+                  Fresh keys every 24 hours
                 </p>
               </div>
             </div>
@@ -79,16 +79,35 @@ const Home = () => {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="text-center">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/admin")}
-            className="text-muted-foreground hover:text-primary transition-colors"
-          >
-            Admin Access
-          </Button>
-        </div>
+        {/* Additional Info */}
+        <Card className="glass-card border-primary/20">
+          <CardContent className="p-6 text-center space-y-4">
+            <h3 className="text-lg font-semibold">About Static Macro</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              No account registration required. Simply get your daily authentication key to access premium macro functionality. 
+              Perfect for automation enthusiasts and power users who need reliable macro tools.
+            </p>
+            <div className="flex items-center justify-center gap-4 pt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Join Discord
+              </Button>
+              <Button 
+                variant="ghost"
+                size="sm" 
+                onClick={() => navigate("/admin")}
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                Admin Portal
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
