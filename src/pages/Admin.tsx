@@ -223,12 +223,6 @@ const Admin = () => {
                   {isLoading ? "Logging in..." : "Login to Admin Panel"}
                 </Button>
               </form>
-              
-              <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border/30">
-                <p className="text-xs text-muted-foreground">
-                  Demo credentials: admin / admin123
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>
