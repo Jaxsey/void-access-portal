@@ -44,6 +44,7 @@ const DynamicKeyPage = () => {
     if (!dailyKey) return;
     
     try {
+      // Copy the raw license key without formatting
       await navigator.clipboard.writeText(dailyKey.license_key);
       setCopied(true);
       toast({
