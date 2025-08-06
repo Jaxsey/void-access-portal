@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +8,7 @@ import { getDailyKey, type DailyKey } from "@/lib/supabase";
 
 const DynamicKeyPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { keyId } = useParams();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -24,9 +24,9 @@ const DynamicKeyPage = () => {
       const key = await getDailyKey();
       if (key) {
         setDailyKey(key);
-        // Check if current URL matches the expected URL path
-        const currentPath = location.pathname.slice(1); // Remove leading slash
-        if (currentPath !== key.url_path) {
+        // Check if current URL parameter matches the expected URL path
+        const expectedPath = `key/${keyId}`;
+        if (expectedPath !== key.url_path) {
           setKeyNotFound(true);
         }
       } else {
